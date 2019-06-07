@@ -1,0 +1,42 @@
+.ColorSelectWrapper {
+  position: relative;
+  width: 100%;
+  height: 80px;
+}
+
+.Primary input,
+.Secondary input {
+  display: none;
+}
+
+.Primary,
+.Secondary {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border: 2px solid #fffefe;
+  cursor: pointer;
+}
+
+.Primary {
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.Secondary {
+  left: 20px;
+  top: 20px;
+}
+
+.Primary:hover,
+.Secondary:hover {
+  border-color: #c5c5c5;
+}
+
+.Revert {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}

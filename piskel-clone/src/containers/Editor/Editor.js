@@ -6,6 +6,9 @@ class Editor extends Component {
     super(props);
     this.state = {
       scale: 32,
+      backgroundColor: '#00000000',
+      secondaryColor: '#00000000',
+      primaryColor: '#c21f1f',
       currentAction: 'drawPixel',
     };
   }
@@ -19,10 +22,25 @@ class Editor extends Component {
     }
   }
 
+  onColorRevert() {
+    const { secondaryColor, primaryColor } = this.state;
+    this.setState({ primaryColor: secondaryColor });
+    this.setState({ secondaryColor: primaryColor });
+  }
+
+  onColorSelect(evt) {
+    const { dataset, value } = evt.target;
+    this.setState({ [dataset.input]: value });
+  }
+
   render() {
     return (
       <Layout
-        onToolHandler={e => this.onToolHandler(e)}>
+        onColorSelect={e => this.onColorSelect(e)}
+        onColorRevert={e => this.onColorRevert(e)}
+        onToolHandler={e => this.onToolHandler(e)}
+        colors={{primary: this.state.primaryColor,
+          secondary: this.state.secondaryColor}}>
       </Layout>
     );
   }

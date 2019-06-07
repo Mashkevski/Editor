@@ -1,0 +1,42 @@
+.Header {
+  left: 0;
+  top: 0;
+  background-color: #777777;
+  display: flex;
+  justify-content: space-between;
+}
+
+.Content {
+  flex-grow: 1;
+  padding: 10px 10px;
+  display: flex;
+}
+
+.PenSize {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  margin-bottom: 10px;
+}
+
+.PenSize li {
+  width: 23px;
+  height: 23px;
+  cursor: pointer;
+}
+
+.PenSize button {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ToolColumn {
+  display: inline-flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 15px 20px 20px 20px;
+  background-color: #acacac;
+  align-self: center;
+}
