@@ -1,13 +1,17 @@
+/* eslint-disable react/no-unused-state */
+/* global document */
+
 import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
+import Canvas from '../../components/Canvas/Canvas';
 
 class Editor extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      scale: 32,
-      backgroundColor: '#00000000',
-      secondaryColor: '#00000000',
+      scale: 4,
+      backgroundColor: '#ffffff00',
+      secondaryColor: '#ffffff00',
       primaryColor: '#c21f1f',
       currentAction: 'drawPixel',
     };
@@ -41,6 +45,7 @@ class Editor extends Component {
         onToolHandler={e => this.onToolHandler(e)}
         colors={{primary: this.state.primaryColor,
           secondary: this.state.secondaryColor}}>
+        <Canvas style={{ height: '800px' }} onMouseDown={e => this.onMouseDown(e)} />
       </Layout>
     );
   }
