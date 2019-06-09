@@ -11,6 +11,17 @@ function draw({ coord }, { scale, primaryColor }, canvas, pixels) {
   return {};
 }
 
+function eraser({ coord }, { scale, backgroundColor }, canvas, pixels) {
+  const { x, y } = coord;
+  const drawnPixels = pixels;
+  const ctx = canvas.getContext('2d');
+  const pixelSize = canvas.width / scale;
+  ctx.fillStyle = backgroundColor;
+  ctx.clearRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  drawnPixels[y * scale + x] = backgroundColor;
+}
+
 function getPixelPosition(event, scale) {
   const { target } = event;
   const targetPosition = target.getBoundingClientRect();
@@ -25,6 +36,7 @@ function getPixelPosition(event, scale) {
 
 const toolActionMap = {
   draw,
+  eraser,
 };
 
 export { toolActionMap, getPixelPosition };

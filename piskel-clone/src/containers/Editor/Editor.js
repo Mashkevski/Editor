@@ -4,7 +4,7 @@
 import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
 import Canvas from '../../components/Canvas/Canvas';
-import { toolActionMap, getPixelPosition } from './toolAction';
+import { toolActionMap, getPixelPosition } from '../toolAction';
 
 
 class Editor extends Component {
