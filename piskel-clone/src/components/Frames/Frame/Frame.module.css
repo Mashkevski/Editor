@@ -1,0 +1,73 @@
+.Frame,
+.ActiveFrame {
+  position: relative;
+
+  box-sizing: border-box;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+
+  background-color: #bebebe;
+  background-image: linear-gradient( 45deg,#dddddd 25%, transparent 25%, transparent 74%, #dddddd 75%, #dddddd),
+  linear-gradient( 45deg,#dddddd 25%, transparent 25%, transparent 74%, #dddddd 75%, #dddddd);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+}
+
+.ActiveFrame {
+  outline: 3px solid red;
+}
+
+.Number,
+.Delete,
+.Duplicate {
+  position: absolute;
+
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+
+  font-weight: bold;
+  font-size: 15px;
+  font-family: sans-serif;
+  color: #ffffff;
+
+  background-color: grey;
+  border: none;
+  transition: opacity 0.1s;
+}
+
+.Number {
+  top: 0;
+  left: 0;
+}
+
+.Delete {
+  opacity: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.Duplicate {
+  opacity: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.Frame:hover button,
+.ActiveFrame:hover button {
+  opacity: 1;
+}
+
+.Delete:hover,
+.Duplicate:hover {
+  color: grey;
+
+  background-color: #ffffff;
+  outline: 3px solid grey;
+}
+
+.Delete:active,
+.Duplicate:active {
+  background-color: #dddddd;
+}
