@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import propTypes from 'prop-types';
 import style from './AnimatedCanvas.module.css';
-import { drawCanvas } from '../../../containers/Editor/toolAction';
+import { drawCanvas } from '../../../containers/toolAction';
 
 class AnimatedCanvas extends Component {
   componentDidMount() {

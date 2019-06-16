@@ -1,3 +1,6 @@
+/* eslint-disable no-param-reassign */
+/* global document */
+
 function findBottomElement(evt, topElement) {
   topElement.style.display = 'none';
   const botElement = document.elementFromPoint(evt.clientX, evt.clientY);
@@ -12,7 +15,7 @@ function highlightElement(botElement, conf) {
   if (botElement) botElement.style.opacity = '0.5';
 
   if (conf.prevElement && conf.prevElement !== botElement) {
-    conf.prevElement.style.opacity = ''
+    conf.prevElement.style.opacity = '';
   }
   conf.prevElement = botElement;
 }
@@ -23,7 +26,6 @@ const onMouseMove = (conf, evt) => {
   const positionTop = conf.targetElement.node.offsetTop - shift;
   conf.targetElement.node.style.top = `${positionTop}px`;
   conf.bottomElement = findBottomElement(evt, conf.targetElement.node);
-  // conf.bottomElement.style.opacity = ''
   highlightElement(conf.bottomElement, conf);
 };
 
@@ -39,7 +41,7 @@ const onMouseUp = (conf) => {
     bindOnMouseUp,
     callbackFunction,
     targetElement,
-    bottomElement
+    bottomElement,
   } = conf;
 
   if (bottomElement) {
@@ -48,12 +50,12 @@ const onMouseUp = (conf) => {
     const topElementNumber = node.dataset.number;
     const bottomElementNumber = bottomElement.dataset.number;
     callbackFunction(topElementNumber, bottomElementNumber);
-    bottomElement.style.opacity = ''
+    bottomElement.style.opacity = '';
   } else {
     conf.targetElement.node.style.top = `${conf.targetElement.startPosition}px`;
   }
 
-  conf.targetElement.node.style.zIndex = ``;
+  conf.targetElement.node.style.zIndex = '';
 
   document.removeEventListener('mousemove', bindOnMouseMove);
   document.removeEventListener('mouseup', bindOnMouseUp);
@@ -77,7 +79,7 @@ const onMouseDown = (evt, fn) => {
   conf.targetElement.node = evt.target.closest('li');
   conf.targetElement.startPosition = conf.targetElement.node.offsetTop;
   conf.startPointerCoord = evt.clientY;
-  conf.targetElement.node.style.zIndex = `100`;
+  conf.targetElement.node.style.zIndex = '100';
 
   conf.bindOnMouseMove = onMouseMove.bind(this, conf);
   conf.bindOnMouseUp = onMouseUp.bind(this, conf);
@@ -87,5 +89,3 @@ const onMouseDown = (evt, fn) => {
 };
 
 export default onMouseDown;
-
-
