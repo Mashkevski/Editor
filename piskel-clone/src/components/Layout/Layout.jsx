@@ -6,6 +6,7 @@ import style from './Layout.module.css';
 import Frames from '../Frames/Frames';
 import AddFrame from '../Frames/AddFrame/AddFrame';
 import Preview from '../Preview/Preview';
+import Layers from '../Layers/Layers';
 import ColorSelect from '../ColorSelect/ColorSelect';
 
 const layout = (props) => {
@@ -15,6 +16,7 @@ const layout = (props) => {
     framesKeys, onFrameDrag, state,
     clickFrameHandler, addFrame, children,
     onInputChange, keyDownHandler,
+    layerHandler, buttonHandler, buttonActions,
   } = props;
   return (
     <>
@@ -62,6 +64,12 @@ const layout = (props) => {
             onInputChange={onInputChange}
             state={state}
           />
+          <Layers
+            layerHandler={layerHandler}
+            buttonHandler={buttonHandler}
+            buttonActions={buttonActions}
+            state={state}
+          />
         </div>
       </main>
     </>
@@ -73,25 +81,21 @@ export default layout;
 layout.propTypes = {
   keyDownHandler: propTypes.func.isRequired,
   currentTool: propTypes.string.isRequired,
+  buttonActions: propTypes.arrayOf(propTypes.string).isRequired,
   toolsActions: propTypes.arrayOf(propTypes.string).isRequired,
   toolHandler: propTypes.func.isRequired,
-  colors: propTypes.shape({
-    primary: propTypes.string.isRequired,
-    secondary: propTypes.string.isRequired,
-  }).isRequired,
+  colors: propTypes.shape({}).isRequired,
   onColorRevert: propTypes.func.isRequired,
   onColorSelect: propTypes.func.isRequired,
   framesKeys: propTypes.arrayOf(propTypes.number).isRequired,
   onFrameDrag: propTypes.func.isRequired,
-  state: propTypes.shape({
-    frames: propTypes.array.isRequired,
-    scale: propTypes.number.isRequired,
-    activeFrameIndex: propTypes.number.isRequired,
-    fps: propTypes.number.isRequired,
-    currentLayerIndex: propTypes.number.isRequired,
-  }).isRequired,
+  state: propTypes.shape({}).isRequired,
   clickFrameHandler: propTypes.func.isRequired,
   addFrame: propTypes.func.isRequired,
   children: propTypes.element.isRequired,
   onInputChange: propTypes.func.isRequired,
+  onSave: propTypes.func.isRequired,
+  onLoad: propTypes.func.isRequired,
+  layerHandler: propTypes.func.isRequired,
+  buttonHandler: propTypes.func.isRequired,
 };
