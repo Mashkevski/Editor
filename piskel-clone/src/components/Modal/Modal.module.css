@@ -1,0 +1,24 @@
+.ShowModal,
+.CloseModal {
+  position: fixed;
+  z-index: 500;
+  background-color: white;
+  width: 40%;
+  border: 1px solid #ccc;
+  box-shadow: 1px 1px 1px black;
+  padding: 15px;
+  left: 50%;
+  top: 20%;
+  box-sizing: border-box;
+  transition: transform 0.3s, opacity 0.2s;
+}
+
+.ShowModal {
+  transform: translateY(0) translateX(-50%);
+  opacity: 1;
+}
+
+.CloseModal {
+  transform: translateY(-100vh) translateX(-50%);
+  opacity: 0;
+}

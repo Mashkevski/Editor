@@ -1,3 +1,4 @@
+/* global document */
 
 import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
@@ -7,6 +8,9 @@ import {
 } from '../toolAction';
 import * as onFrameDrag from '../dragAndDrop';
 import buttonActionMap from '../layerButtonActions';
+import Modal from '../../components/Modal/Modal';
+import CheatSheet from '../../components/CheatSheet/CheatSheet';
+import toolInfo from '../toolInfo';
 
 class Editor extends Component {
   constructor(props) {
@@ -134,6 +138,55 @@ class Editor extends Component {
     this.setState({ fps: +evt.target.value });
   }
 
+  toolInfoInit() {
+    this.setState({ toolInfo: toolInfo.slice() });
+  }
+
+  runOnKeys() {
+    document.addEventListener('keydown', (evt) => {
+      const {
+        selectedPixels, isPixelsSelected, copiedPixels,
+        changedShortcut, isModalShow,
+      } = this.state;
+      const char = String.fromCharCode(evt.keyCode);
+      if (changedShortcut && isModalShow) {
+        this.setState(prevState => ({
+          toolInfo: prevState.toolInfo.map((item) => {
+            if (item.name === changedShortcut) {
+              return { ...item, key: char };
+            }
+            if (item.key === char) {
+              return { ...item, key: '' };
+            }
+            return { ...item };
+          }),
+          changedShortcut: '',
+        }));
+      } else if (evt.ctrlKey && char === 'C' && isPixelsSelected) {
+        this.setState({ copiedPixels: selectedPixels });
+      } else if (evt.ctrlKey && char === 'V' && copiedPixels.length) {
+        const {
+          frames, activeFrameIndex,
+          scale, mainCanvas,
+        } = this.state;
+        const newFrames = frames.slice();
+        copiedPixels.forEach((pixel) => {
+          const { x, y, color } = pixel;
+          newFrames[activeFrameIndex][y * scale + x] = color;
+        });
+        drawCanvas(mainCanvas.current.canvas, copiedPixels, scale);
+        this.setState({ frames: newFrames });
+      } else {
+        const { state } = this;
+        const tool = state.toolInfo.find(item => item.key === char);
+        if (tool && state.currentAction !== tool.name) {
+          this.setState({ currentAction: tool.name });
+        }
+      }
+    });
+  }
+
+
   clickFrameHandler({ target, id }) {
     if (target.dataset.action === 'del') {
       const { frames, activeFrameIndex, framesKeys } = this.state;
@@ -215,6 +268,16 @@ class Editor extends Component {
     });
   }
 
+  showModalHandler() {
+    const { isModalShow } = this.state;
+    if (isModalShow) {
+      this.setState({
+        isModalShow: false,
+        changedShortcut: '',
+      });
+    } else this.setState({ isModalShow: true });
+  }
+
   // eslint-disable-next-line no-unused-vars
   mouseUp(pixels, { coordinatesArray, isSelectFunction, selectedColor }, canvas) {
     const { currentAction, backgroundColor } = this.state;
@@ -258,6 +321,10 @@ class Editor extends Component {
   keyDownHandler() {
     console.log(this.state);
     console.log('key');
+  }
+
+  keyChangeHandler(name) {
+    this.setState({ changedShortcut: name });
   }
 
   layerHandler(evt) {
@@ -310,7 +377,7 @@ class Editor extends Component {
       framesKeys, currentAction, primaryColor,
       secondaryColor, isCanvasClear, frames,
       activeFrameIndex, scale, width,
-      height,
+      height, isModalShow,
     } = this.state;
     return (
       <Layout
@@ -346,6 +413,17 @@ class Editor extends Component {
           canvasStyle={{ height: '800px', width: '800px' }}
           onMouseDown={e => this.onMouseDown(e)}
         />
+        <Modal
+          show={isModalShow}
+          modalClosed={e => this.showModalHandler(e)}
+        >
+          <CheatSheet
+            setDefault={() => this.toolInfoInit()}
+            modalClosed={e => this.showModalHandler(e)}
+            keyChangeHandler={key => this.keyChangeHandler(key)}
+            state={this.state}
+          />
+        </Modal>
       </Layout>
     );
   }
