@@ -222,6 +222,37 @@ function line({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }
   return { coordinatesArray, isNextAction: true };
 }
 
+function rectangle({ startCoord, coord }, state, { pixels, canvas }, { shiftKey }) {
+  const { scale, primaryColor } = state;
+  const coordinatesArray = [];
+  const xStart = Math.min(startCoord.x, coord.x);
+  const yStart = Math.min(startCoord.y, coord.y);
+  let xEnd = Math.max(startCoord.x, coord.x);
+  let yEnd = Math.max(startCoord.y, coord.y);
+  if (shiftKey) {
+    const minShift = Math.min(xEnd - xStart, yEnd - yStart);
+    yEnd = minShift + yStart;
+    xEnd = minShift + xStart;
+  }
+
+  for (let x = xStart; x <= xEnd; x += 1) {
+    coordinatesArray.push({ x, y: yStart, color: primaryColor });
+    coordinatesArray.push({ x, y: yEnd, color: primaryColor });
+  }
+
+  for (let y = yStart; y <= yEnd; y += 1) {
+    coordinatesArray.push({ x: xStart, y, color: primaryColor });
+    coordinatesArray.push({ x: xEnd, y, color: primaryColor });
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+  drawCanvas(canvas, coordinatesArray, scale);
+
+  return { coordinatesArray, isNextAction: true };
+}
+
 function paintAll({ coord }, { scale, primaryColor }, { pixels, canvas }) {
   const targetColor = pixels[coord.y * scale + coord.x];
   const drawnPixels = [];
@@ -261,6 +292,7 @@ const toolActionMap = {
   eraser,
   bucket,
   line,
+  rectangle,
   paintAll,
   lighten,
   picker: pickColor,
