@@ -1,3 +1,8 @@
+const LIGHTEN_STEP = 17;
+const MAX_COLOR_VALUE = 255;
+const MIN_COLOR_VALUE = 0;
+const SELECT_COLOR = '#006a8a55';
+
 function drawFullCanvas(canvas, pixels, scale, frameIndex = 0) {
   const pixelSize = canvas.height / scale;
   const ctx = canvas.getContext('2d');
@@ -98,6 +103,35 @@ function eraser({ coord }, { scale, backgroundColor }, { canvas }) {
   return { drawnPixels, isNextAction: true };
 }
 
+function lightenHex(n) {
+  let num = +`0x${n}`;
+  num += LIGHTEN_STEP;
+  return num > MAX_COLOR_VALUE ? 'ff' : num.toString(16).padStart(2, '0');
+}
+
+function darkenHex(n) {
+  let num = +`0x${n}`;
+  num -= LIGHTEN_STEP;
+  return num < MIN_COLOR_VALUE ? '00' : num.toString(16).padStart(2, '0');
+}
+
+function lighten({ coord }, { scale, backgroundColor }, { canvas, pixels }, evt) {
+  const { x, y } = coord;
+  const reg = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{0,2})/i;
+  const [baseColor, r, g, b, a] = pixels[y * scale + x].match(reg);
+  if (baseColor === backgroundColor) return { isNextAction: false };
+  const drawnPixels = [];
+  let color = '';
+  if (evt.shiftKey) {
+    color = `#${darkenHex(r)}${darkenHex(g)}${darkenHex(b)}${a}`;
+  } else {
+    color = `#${lightenHex(r)}${lightenHex(g)}${lightenHex(b)}${a}`;
+  }
+  drawnPixels.push({ x, y, color });
+  drawCanvas(canvas, drawnPixels, scale);
+  return { drawnPixels, isNextAction: false };
+}
+
 function bucket({ coord }, { scale, primaryColor }, { canvas, pixels }) {
   const pixelStack = [[coord.x, coord.y]];
   const targetColor = pixels[coord.y * scale + coord.x];
@@ -193,7 +227,7 @@ const toolActionMap = {
   eraser,
   bucket,
   paintAll,
-
+  lighten,
   picker: pickColor,
 };
 
