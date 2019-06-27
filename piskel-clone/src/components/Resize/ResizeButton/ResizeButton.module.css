@@ -1,0 +1,21 @@
+.ResizeButton,
+.ActiveResizeButton {
+  display: inline-block;
+  text-align: center;
+  padding: 7px 0 7px 0;
+  margin-right: 10px;
+  min-width: 35px;
+  border: 1px solid grey;
+  background-color: rgb(226, 226, 226);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.ActiveResizeButton {
+  border: 2px solid red;
+}
+
+.ResizeButton input,
+.ActiveResizeButton input {
+  display: none;
+}

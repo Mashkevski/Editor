@@ -4,7 +4,8 @@ import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
 import Canvas from '../../components/Canvas/Canvas';
 import {
-  toolActionMap, getPixelPosition, drawCanvas,
+  toolActionMap, getPixelPosition,
+  drawFullCanvas, drawCanvas,
 } from '../toolAction';
 import * as onFrameDrag from '../dragAndDrop';
 import buttonActionMap from '../layerButtonActions';
@@ -327,6 +328,61 @@ class Editor extends Component {
     this.setState({ changedShortcut: name });
   }
 
+  resizeHandler(evt) {
+    const value = +evt.target.value;
+    const { scale, frames, layers } = this.state;
+    const resizeFrame = (frame, prevScale, nextScale) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = prevScale;
+      canvas.height = prevScale;
+      drawFullCanvas(canvas, frame, prevScale);
+      const nextCanvas = document.createElement('canvas');
+      const nextCtx = nextCanvas.getContext('2d');
+      nextCanvas.width = nextScale;
+      nextCanvas.height = nextScale;
+      const coord = Math.abs((nextScale - prevScale) / 2);
+      if (prevScale < nextScale) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        nextCtx.putImageData(imageData, coord, coord);
+      } else {
+        const imageData = ctx.getImageData(coord, coord, nextCanvas.width, nextCanvas.height);
+        nextCtx.putImageData(imageData, 0, 0);
+      }
+      const { data } = nextCtx.getImageData(0, 0, nextCanvas.width, nextCanvas.height);
+      return data;
+    };
+
+    function getHex(n) {
+      return n.toString(16).padStart(2, '0');
+    }
+
+    const resizeFrames = resizedFrames => resizedFrames.map((frame) => {
+      const pixels = [];
+      const data = resizeFrame(frame, scale, value);
+      for (let i = 0; i < data.length; i += 4) {
+        const [r, g, b, a] = data.slice(i, i + 4);
+        pixels.push(`#${getHex(r)}${getHex(g)}${getHex(b)}${getHex(a)}`);
+      }
+      return pixels;
+    });
+
+    const resizedLayers = layers.map((layer) => {
+      const resizedLayer = {
+        name: layer.name,
+        framesKeys: layer.framesKeys,
+        frames: resizeFrames(layer.frames),
+      };
+      return resizedLayer;
+    });
+
+    this.setState({
+      frames: resizeFrames(frames),
+      scale: value,
+      layers: resizedLayers,
+    });
+  }
+
   layerHandler(evt) {
     const { target } = evt;
     const {
@@ -383,6 +439,7 @@ class Editor extends Component {
       <Layout
         onSave={e => this.onSave(e)}
         onLoad={e => this.onLoad(e)}
+        resizeHandler={e => this.resizeHandler(e)}
         keyDownHandler={e => this.keyDownHandler(e)}
         onInputChange={e => this.onInputChange(e)}
         framesKeys={framesKeys}

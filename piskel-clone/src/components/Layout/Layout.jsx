@@ -8,6 +8,8 @@ import AddFrame from '../Frames/AddFrame/AddFrame';
 import Preview from '../Preview/Preview';
 import Layers from '../Layers/Layers';
 import ColorSelect from '../ColorSelect/ColorSelect';
+import Resize from '../Resize/Resize';
+
 
 const layout = (props) => {
   const {
@@ -15,7 +17,7 @@ const layout = (props) => {
     colors, onColorRevert, onColorSelect,
     framesKeys, onFrameDrag, state,
     clickFrameHandler, addFrame, children,
-    onInputChange, keyDownHandler,
+    onInputChange, resizeHandler, keyDownHandler,
     layerHandler, buttonHandler, buttonActions,
   } = props;
   return (
@@ -64,6 +66,10 @@ const layout = (props) => {
             onInputChange={onInputChange}
             state={state}
           />
+          <Resize
+            resizeHandler={resizeHandler}
+            scale={state.scale}
+          />
           <Layers
             layerHandler={layerHandler}
             buttonHandler={buttonHandler}
@@ -98,4 +104,5 @@ layout.propTypes = {
   onLoad: propTypes.func.isRequired,
   layerHandler: propTypes.func.isRequired,
   buttonHandler: propTypes.func.isRequired,
+  resizeHandler: propTypes.func.isRequired,
 };
