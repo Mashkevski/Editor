@@ -188,6 +188,40 @@ function bucket({ coord }, { scale, primaryColor }, { canvas, pixels }) {
   return { drawnPixels, isNextAction: false };
 }
 
+function line({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }) {
+  let x1 = startCoord.x;
+  let y1 = startCoord.y;
+  const x2 = coord.x;
+  const y2 = coord.y;
+  const coordinatesArray = [];
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  const sx = (x1 < x2) ? 1 : -1;
+  const sy = (y1 < y2) ? 1 : -1;
+  let err = dx - dy;
+  coordinatesArray.push({ x: x1, y: y1, color: primaryColor });
+
+  while (!((x1 === x2) && (y1 === y2))) {
+    const e2 = err * 2;
+    if (e2 > -dy) {
+      err -= dy;
+      x1 += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y1 += sy;
+    }
+    coordinatesArray.push({ x: x1, y: y1, color: primaryColor });
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+  drawCanvas(canvas, coordinatesArray, scale);
+
+  return { coordinatesArray, isNextAction: true };
+}
+
 function paintAll({ coord }, { scale, primaryColor }, { pixels, canvas }) {
   const targetColor = pixels[coord.y * scale + coord.x];
   const drawnPixels = [];
@@ -226,6 +260,7 @@ const toolActionMap = {
   mirror,
   eraser,
   bucket,
+  line,
   paintAll,
   lighten,
   picker: pickColor,
