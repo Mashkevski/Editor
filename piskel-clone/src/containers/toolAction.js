@@ -286,6 +286,29 @@ function paintAll({ coord }, { scale, primaryColor }, { pixels, canvas }) {
   return { drawnPixels, isNextAction: false };
 }
 
+function move({ startCoord, coord }, { scale }, { pixels, canvas }) {
+  if (coord.x === startCoord.x
+    && coord.y === startCoord.y) {
+    return { isNextAction: true };
+  }
+  const dx = startCoord.x - coord.x;
+  const dy = startCoord.y - coord.y;
+  const coordinatesArray = [];
+
+  pixels.forEach((color, i) => {
+    const y = Math.floor(i / scale) - dy;
+    const x = i - Math.floor(i / scale) * scale - dx;
+    if ((x >= 0 && x < scale) && (y >= 0 && y < scale)) {
+      coordinatesArray.push({ x, y, color });
+    }
+  });
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawCanvas(canvas, coordinatesArray, scale);
+  return { coordinatesArray, isNextAction: true };
+}
+
 function pickColor({ coord }, { scale }, { pixels }) {
   const selectedColor = pixels[coord.y * scale + coord.x];
   console.log(selectedColor);
@@ -314,6 +337,7 @@ const toolActionMap = {
   paintAll,
   lighten,
   fillRectangle,
+  move,
   picker: pickColor,
 };
 
