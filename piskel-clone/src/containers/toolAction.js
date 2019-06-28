@@ -222,6 +222,24 @@ function line({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }
   return { coordinatesArray, isNextAction: true };
 }
 
+function fillRectangle({ startCoord, coord }, { scale }, { canvas, pixels }) {
+  const coordinatesArray = [];
+  const xStart = Math.min(startCoord.x, coord.x);
+  const yStart = Math.min(startCoord.y, coord.y);
+  const xEnd = Math.max(startCoord.x, coord.x);
+  const yEnd = Math.max(startCoord.y, coord.y);
+  for (let y = yStart; y <= yEnd; y += 1) {
+    for (let x = xStart; x <= xEnd; x += 1) {
+      coordinatesArray.push({ x, y, color: SELECT_COLOR });
+    }
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+  drawCanvas(canvas, coordinatesArray, scale);
+  return { coordinatesArray, isNextAction: true, isSelectFunction: true };
+}
+
 function rectangle({ startCoord, coord }, state, { pixels, canvas }, { shiftKey }) {
   const { scale, primaryColor } = state;
   const coordinatesArray = [];
@@ -295,6 +313,7 @@ const toolActionMap = {
   rectangle,
   paintAll,
   lighten,
+  fillRectangle,
   picker: pickColor,
 };
 
