@@ -1,0 +1,33 @@
+.ActiveTip {
+  position: absolute;
+  top: 0;
+  left: 120%;
+  background-color: #000000;
+  width: 150px;
+  z-index: 100;
+  color: #ffffff;
+  font-size: 10px;
+  padding-left: 10px;
+}
+
+.ActiveTip {
+  display: block;
+}
+
+.ActiveTip::before {
+  position: absolute;
+  content: '';
+  top: 20px;
+  left: -5px;
+  z-index: 90;
+
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-right: 10px solid #000000;
+  border-bottom: 5px solid transparent;
+}
+
+.Tip {
+  display: none;
+}

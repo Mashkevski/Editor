@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import propTypes from 'prop-types';
 import style from './Canvas.module.css';
-import { drawCanvas } from '../../containers/toolAction';
+import { drawFullCanvas, getPixelPosition } from '../../actions/tools/toolAction';
 
 class Canvas extends Component {
   componentDidMount() {
@@ -13,16 +13,21 @@ class Canvas extends Component {
   }
 
   componentDidUpdate() {
-    const { pixels } = this.props;
-    if (pixels) {
+    const { pixels, isPixelsSelected } = this.props;
+    if (pixels && !isPixelsSelected) {
       this.clearCanvas();
       this.updateCanvas();
     }
   }
 
-  updateCanvas() {
-    const { pixels, scale } = this.props;
-    drawCanvas(this.canvas, pixels, scale);
+  onCursorMove(e) {
+    const { scale } = this.props;
+    const { x, y } = getPixelPosition(e, scale);
+    this.span.textContent = `${x}:${y}`;
+  }
+
+  onCursorLeave() {
+    this.span.textContent = '';
   }
 
   clearCanvas() {
@@ -31,24 +36,50 @@ class Canvas extends Component {
     ctx.clearRect(0, 0, canvas.width, canvas.width);
   }
 
+  updateCanvas() {
+    const { pixels, scale } = this.props;
+    drawFullCanvas(this.canvas, pixels, scale);
+  }
+
   render() {
     const {
-      canvasStyle,
-      width,
-      height,
-      onMouseDown,
+      canvasStyle, width, height,
+      onMouseDown, scale, isCanvasMain,
     } = this.props;
-    return (
-      <div className={style.CanvasWrapper}>
-        <canvas
-          ref={(c) => { this.canvas = c; }}
-          style={canvasStyle}
-          width={width}
-          height={height}
-          onMouseDown={onMouseDown}
-        />
-      </div>
-    );
+    const size = `[${scale}x${scale}]`;
+    let canvasComponent = null;
+    if (isCanvasMain) {
+      canvasComponent = (
+        <div className={style.CanvasWrapper}>
+          <canvas
+            ref={(c) => { this.canvas = c; }}
+            style={canvasStyle}
+            width={width}
+            height={height}
+            onMouseDown={onMouseDown}
+            onMouseMove={e => this.onCursorMove(e)}
+            onMouseLeave={e => this.onCursorLeave(e)}
+          />
+          <div className={style.Info}>
+            <span>{size}</span>
+            <span ref={(c) => { this.span = c; }} />
+          </div>
+        </div>
+      );
+    } else {
+      canvasComponent = (
+        <div className={style.CanvasWrapper}>
+          <canvas
+            ref={(c) => { this.canvas = c; }}
+            style={canvasStyle}
+            width={width}
+            height={height}
+            onMouseDown={onMouseDown}
+          />
+        </div>
+      );
+    }
+    return canvasComponent;
   }
 }
 
@@ -63,9 +94,13 @@ Canvas.propTypes = {
   scale: propTypes.number.isRequired,
   width: propTypes.string.isRequired,
   height: propTypes.string.isRequired,
+  isPixelsSelected: propTypes.bool,
   onMouseDown: propTypes.func,
+  isCanvasMain: propTypes.bool,
 };
 
 Canvas.defaultProps = {
   onMouseDown: undefined,
+  isCanvasMain: undefined,
+  isPixelsSelected: false,
 };

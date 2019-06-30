@@ -2,27 +2,35 @@ import React from 'react';
 import propTypes from 'prop-types';
 import style from './Tools.module.css';
 import Tool from './Tool/Tool';
+import Tip from './Tip/Tip';
 
 const tools = ({
-  toolsActions, currentTool,
-  keyDownHandler, toolHandler,
+  toolsActions, currentTool, toolHandler,
+  nameTipTool, onEnter, onLeave,
+  toolInfo,
 }) => {
   const toolsList = toolsActions.map(tool => (
-    <li key={Math.random()}>
+    <li
+      className={style.ToolContainer}
+      key={Math.random()}
+    >
       <Tool
         isActive={tool === currentTool}
         action={tool}
-      >
-        {tool}
-      </Tool>
+        onClick={toolHandler}
+        onEnter={onEnter}
+        onLeave={onLeave}
+      />
+      <Tip
+        action={tool}
+        isShow={tool === nameTipTool}
+        toolInfo={toolInfo}
+      />
     </li>
   ));
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ul
       className={style.Tools}
-      onClick={toolHandler}
-      onKeyDown={keyDownHandler}
     >
       {toolsList}
     </ul>
@@ -32,8 +40,15 @@ const tools = ({
 export default tools;
 
 tools.propTypes = {
-  keyDownHandler: propTypes.func.isRequired,
   toolsActions: propTypes.arrayOf(propTypes.string).isRequired,
+  toolInfo: propTypes.arrayOf(propTypes.object),
   currentTool: propTypes.string.isRequired,
   toolHandler: propTypes.func.isRequired,
+  nameTipTool: propTypes.string.isRequired,
+  onEnter: propTypes.func.isRequired,
+  onLeave: propTypes.func.isRequired,
+};
+
+tools.defaultProps = {
+  toolInfo: null,
 };

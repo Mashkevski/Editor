@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React from 'react';
 import propTypes from 'prop-types';
 import style from './Buttons.module.css';
@@ -6,9 +5,9 @@ import Button from './Button/Button';
 
 const buttons = ({ buttonActions, buttonHandler, state }) => {
   const buttonList = buttonActions.map((buttonName) => {
-    const disabled = (state.currentLayerIndex === state.layers.length - 1
+    const disabled = (state.activeLayerIndex === state.layers.length - 1
       && buttonName === 'Down')
-      || (state.currentLayerIndex === 0 && buttonName === 'Up')
+      || (state.activeLayerIndex === 0 && buttonName === 'Up')
       || (state.layers.length === 1 && buttonName === 'Del');
     return (
       <li key={Math.random()}>
@@ -35,7 +34,7 @@ buttons.propTypes = {
   buttonActions: propTypes.arrayOf(propTypes.string).isRequired,
   buttonHandler: propTypes.func.isRequired,
   state: propTypes.shape({
-    currentLayerIndex: propTypes.number.isRequired,
+    activeLayerIndex: propTypes.number.isRequired,
     layers: propTypes.arrayOf(propTypes.object).isRequired,
   }).isRequired,
 };

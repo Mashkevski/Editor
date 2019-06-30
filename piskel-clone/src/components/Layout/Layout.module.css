@@ -1,42 +1,39 @@
 .Header {
-  left: 0;
   top: 0;
-  background-color: #fff6f6;
+  left: 0;
+
   display: flex;
   justify-content: space-between;
+
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: grey;
 }
 
 .Content {
+  display: flex;
   flex-grow: 1;
   padding: 10px 10px;
-  display: flex;
-}
-
-.PenSize {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: inline-flex;
-  margin-bottom: 10px;
-}
-
-.PenSize li {
-  width: 23px;
-  height: 23px;
-  cursor: pointer;
-}
-
-.PenSize button {
-  display: block;
-  width: 100%;
-  height: 100%;
+  align-items: flex-start;
 }
 
 .ToolColumn {
   display: inline-flex;
   flex-direction: column;
+  align-self: flex-start;
   box-sizing: border-box;
   padding: 15px 20px 20px 20px;
+
   background-color: #acacac;
-  align-self: center;
+}
+
+.FramesColumn {
+  height: 90vh;
+  padding-top: 5px;
+  padding-right: 5px;
+  overflow: auto;
+}
+
+.RightColomn {
+  height: 90vh;
 }

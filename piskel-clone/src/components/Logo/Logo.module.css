@@ -1,6 +1,7 @@
 .Logo {
   margin: 0;
-  text-transform: uppercase;
-  color: #ffffff;
-}
 
+  font-size: 28px;
+  color: #ffffff;
+  text-transform: uppercase;
+}

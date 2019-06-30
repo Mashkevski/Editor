@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import propTypes from 'prop-types';
 import style from './AnimatedCanvas.module.css';
-import { drawCanvas } from '../../../containers/toolAction';
+import { drawFullCanvas } from '../../../actions/tools/toolAction';
 
 class AnimatedCanvas extends Component {
   componentDidMount() {
@@ -49,7 +49,7 @@ class AnimatedCanvas extends Component {
     if (timeFraction > 1000 / fps && i < frames.length) {
       const pixels = frames[i].slice();
       this.clearCanvas(canvas);
-      drawCanvas(canvas, pixels, scale);
+      drawFullCanvas(canvas, pixels, scale);
       start = time;
       i += 1;
     }

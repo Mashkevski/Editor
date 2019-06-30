@@ -1,5 +1,3 @@
-/* eslint-disable no-debugger */
-/* eslint-disable no-unused-vars */
 import React from 'react';
 import propTypes from 'prop-types';
 import style from './Layers.module.css';
@@ -14,10 +12,9 @@ const layers = ({
     <li key={Math.random()}>
       <Layer
         onClick={layerHandler}
-        isActive={i === state.currentLayerIndex}
+        isActive={i === state.activeLayerIndex}
         name={layer.name}
         index={i}
-        // action={buttonName}
       />
     </li>
   ));
@@ -43,7 +40,7 @@ layers.propTypes = {
   buttonHandler: propTypes.func.isRequired,
   layerHandler: propTypes.func.isRequired,
   state: propTypes.shape({
-    currentLayerIndex: propTypes.number.isRequired,
+    activeLayerIndex: propTypes.number.isRequired,
     layers: propTypes.arrayOf(propTypes.object).isRequired,
   }).isRequired,
 };

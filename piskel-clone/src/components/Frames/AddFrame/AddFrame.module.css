@@ -1,11 +1,18 @@
 .AddFrame {
   width: 100px;
-  color: #ffffff;
-  font-size: 16px;
-  font-family: sans-serif;
   margin-left: 30px;
   padding: 10px 5px ;
+
+  font-size: 16px;
+  font-family: sans-serif;
+  color: #ffffff;
+
+  background-color: #9e9d9d;
   border: 3px solid #ffffff;
   border-radius: 5px;
-  background-color: #bbbaba;
+}
+
+.AddFrame:hover {
+  background-color: #797878;
+  cursor: pointer;
 }

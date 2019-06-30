@@ -12,7 +12,6 @@ const colorSelect = ({ colors, onSelect, onRevert }) => (
       <input
         id="primary-color"
         type="color"
-        defaultValue="#000001"
         data-input="primaryColor"
         onChange={onSelect}
       />
@@ -25,7 +24,6 @@ const colorSelect = ({ colors, onSelect, onRevert }) => (
       <input
         id="secondary-color"
         type="color"
-        defaultValue="#000001"
         data-input="secondaryColor"
         onChange={onSelect}
       />
@@ -36,7 +34,7 @@ const colorSelect = ({ colors, onSelect, onRevert }) => (
       className={style.Revert}
       onClick={onRevert}
     >
-        Revert
+      Revert
     </button>
   </div>
 );

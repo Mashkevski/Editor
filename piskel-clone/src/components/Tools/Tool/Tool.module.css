@@ -1,16 +1,19 @@
 .Tool,
 .ActiveTool {
-  /* background-image: url(../img/icons.png?20181125); */
-  /* background-position: -182px 0px; */
   width: 100%;
   height: 100%;
-  font-size: 5px;
-  cursor: pointer;
-  background-color: #868585;
-  border: none;
   overflow: hidden;
-  color: #ffffff;
+
   font-weight: bold;
+  font-size: 10px;
+  color: #ffffff;
+
+  background-color: #868585;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: 30px auto;
+  border: none;
+  cursor: pointer;
 }
 
 .Tool:hover {
@@ -19,5 +22,68 @@
 
 
 .ActiveTool {
-  background-color: #4b4b4b;
+  border: 3px solid #e61818;
+}
+
+.bucket {
+  background-image: url("../../../assets/bucket.png");
+}
+
+.move {
+  background-image: url("../../../assets/move.png");
+}
+
+.picker {
+  background-image: url("../../../assets/picker.png");
+  background-size: 25px auto;
+}
+
+.dithering {
+  background-image: url("../../../assets/dithering.png");
+}
+
+.circle {
+  background-image: url("../../../assets/circle.png");
+}
+
+.rectangle {
+  background-image: url("../../../assets/rectangle.png");
+}
+
+.line {
+  background-image: url("../../../assets/line.png");
+}
+
+.pen {
+  background-image: url("../../../assets/pen.png");
+}
+
+.paintAll {
+  background-image: url("../../../assets/paintAll.png");
+}
+
+.shape {
+  background-image: url("../../../assets/shape.png");
+  background-size: 35px auto;
+}
+
+.eraser {
+  background-image: url("../../../assets/eraser.png");
+  background-size: 35px auto;
+}
+
+.fillRectangle {
+  background-image: url("../../../assets/fillRectangle.png");
+}
+
+.lighten {
+  background-image: url("../../../assets/lighten.png");
+  background-position: 40% 50%;
+  background-size: 35px auto;
+}
+
+.mirror {
+  background-image: url("../../../assets/mirror.png");
+  background-position: 40% 50%;
+  background-size: 38px auto;
 }

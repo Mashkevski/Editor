@@ -42,7 +42,7 @@ const toolInfo = [
     key: 'R',
   },
   {
-    name: 'drawEllipsis',
+    name: 'circle',
     text: 'Circle tool',
     shift: '',
     ctrl: 'Keep 1 to 1 ratio',

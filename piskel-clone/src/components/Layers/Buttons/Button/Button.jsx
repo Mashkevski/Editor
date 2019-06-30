@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-debugger */
 import React from 'react';
 import propTypes from 'prop-types';
 import style from './Button.module.css';

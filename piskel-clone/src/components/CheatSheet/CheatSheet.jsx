@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-console */
 import React from 'react';
 import propTypes from 'prop-types';
 import style from './CheatSheet.module.css';
@@ -16,7 +14,7 @@ const cheatSheet = ({
         <button
           type="button"
           className={state.changedShortcut === name ? style.ActiveKey : style.styleKey}
-          onClick={(e) => {
+          onClick={() => {
             keyChangeHandler(name);
           }}
         >

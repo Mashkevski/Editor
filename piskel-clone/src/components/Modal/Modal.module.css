@@ -19,6 +19,6 @@
 }
 
 .CloseModal {
-  transform: translateY(-100vh) translateX(-50%);
+  transform: translateY(-200vh) translateX(-50%);
   opacity: 0;
 }

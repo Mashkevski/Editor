@@ -1,14 +1,15 @@
 .Frames {
   position: relative;
+
   margin: 0 50px 0 30px;
   padding: 0;
 
   list-style: none;
-  background-color: #fff;
+
+  background-color: #ffffff;
 }
 
 .Frames li {
   position: absolute;
   top: 0;
 }
-

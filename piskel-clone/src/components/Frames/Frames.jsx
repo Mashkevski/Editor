@@ -5,7 +5,7 @@ import Frame from './Frame/Frame';
 
 const frames = ({
   state, clickFrameHandler,
-  onFrameDrag, framesKeys, keyDownHandler,
+  onFrameDrag, framesKeys,
 }) => {
   const framesList = state.frames.map((frame, i) => (
     <li
@@ -21,7 +21,6 @@ const frames = ({
         scale={state.scale}
         clickFrameHandler={clickFrameHandler}
         isActive={i === state.activeFrameIndex}
-        keyDownHandler={keyDownHandler}
       />
     </li>
   ));
@@ -45,5 +44,4 @@ frames.propTypes = {
   framesKeys: propTypes.arrayOf(propTypes.number).isRequired,
   clickFrameHandler: propTypes.func.isRequired,
   onFrameDrag: propTypes.func.isRequired,
-  keyDownHandler: propTypes.func.isRequired,
 };

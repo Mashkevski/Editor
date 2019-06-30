@@ -4,8 +4,10 @@
   padding: 0;
   display: grid;
   grid-auto-rows: 46px;
-  grid-gap: 1px;
+  grid-gap: 5px;
   grid-template-columns: repeat(2, 46px);
 }
 
-
+.ToolContainer {
+  position: relative;
+}

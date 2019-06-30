@@ -6,13 +6,13 @@ import Canvas from '../../Canvas/Canvas';
 const frame = (props) => {
   const {
     id, isActive, clickFrameHandler,
-    pixels, scale, keyDownHandler,
+    pixels, scale,
   } = props;
   return (
     <div
       role="menuitem"
       tabIndex={0}
-      onKeyDown={keyDownHandler}
+      onKeyDown={() => undefined}
       key={id}
       className={isActive ? style.ActiveFrame : style.Frame}
       onClick={(e) => {
@@ -53,5 +53,4 @@ frame.propTypes = {
   clickFrameHandler: propTypes.func.isRequired,
   pixels: propTypes.arrayOf(propTypes.string).isRequired,
   scale: propTypes.number.isRequired,
-  keyDownHandler: propTypes.func.isRequired,
 };
