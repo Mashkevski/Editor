@@ -1,6 +1,7 @@
 /* global document, window */
 
 const URL = 'https://apis.google.com/js/platform.js';
+const GOOGLE_CLIENT_ID = '57254222200-1qnic37rnf5l9igno0pdt9oqgrn3p361.apps.googleusercontent.com';
 
 const loadScript = () => {
   const promise = new Promise((resolve, reject) => {
@@ -41,7 +42,7 @@ const loadApi = () => {
         window.gapi.load('auth2', () => {
           window.gapi.auth2
             .init({
-              client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+              client_id: GOOGLE_CLIENT_ID,
             })
             .then(onInit, onError);
         });
