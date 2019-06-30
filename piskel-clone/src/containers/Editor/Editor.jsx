@@ -1,67 +1,74 @@
+/* eslint-disable no-debugger */
+/* eslint-disable no-console */
 /* global document */
 
 import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
 import Canvas from '../../components/Canvas/Canvas';
-import {
-  toolActionMap, getPixelPosition,
-  drawFullCanvas, drawCanvas,
-} from '../toolAction';
-import * as onFrameDrag from '../dragAndDrop';
-import buttonActionMap from '../layerButtonActions';
+import { toolActionMap, getPixelPosition, drawCanvas } from '../../actions/tools/toolAction';
+import resizeFrames from '../../actions/resizeCanvas';
+import onFrameDrag from '../../actions/dragAndDrop';
+import buttonActionMap from '../../actions/layerbuttonActions';
 import Modal from '../../components/Modal/Modal';
 import CheatSheet from '../../components/CheatSheet/CheatSheet';
-import toolInfo from '../toolInfo';
+import toolInfo from './constant/toolInfo';
 import saveActionMap from '../../actions/saveActions';
 import { loadFile, getFramesFromPiskel } from '../../actions/loadActions';
+import { getUpdatedLayers } from '../../utils/utils';
+import DEFAULT from './constant/constants';
 
 class Editor extends Component {
   constructor(props) {
     super(props);
+    this.mainCanvas = React.createRef();
     this.state = {
-      fps: 5,
-      scale: 32,
-      width: '800',
-      height: '800',
-      backgroundColor: '#00000000',
-      secondaryColor: '#00000000',
-      primaryColor: '#c21f1f',
-      currentAction: 'pen',
-      activeFrameIndex: 0,
+      fps: DEFAULT.fps,
+      scale: DEFAULT.canvasScale,
+      secondaryColor: DEFAULT.color.secondary,
+      primaryColor: DEFAULT.color.primary,
+      currentAction: DEFAULT.tool,
+      activeFrameIndex: DEFAULT.activeFrameIndex,
       framesKeys: [],
-      startCoord: { x: 0, y: 0 },
-      frames: [new Array(1024).fill('#00000000')],
-      currentLayerIndex: 0,
-      currentLayerName: 'Layer 1',
-      layers: [],
-      coordinatesArray: [],
+      frames: [new Array(DEFAULT.canvasScale ** 2).fill(DEFAULT.color.background)],
+      activeLayerIndex: DEFAULT.activeLayerIndex,
+      layerName: DEFAULT.layerName,
+      layers: [{
+        name: DEFAULT.layerName,
+        frames: [],
+        framesKeys: [],
+      }],
       selectedPixels: [],
       copiedPixels: [],
       isPixelsSelected: false,
-      layersNumber: 1,
+      layersNumber: DEFAULT.layersNumber,
       canvas: null,
-      mainCanvas: React.createRef(),
+      isModalShow: false,
+      changedShortcut: '',
+      toolInfo: null,
+      fileFormat: DEFAULT.fileFormat,
     };
   }
 
   componentDidMount() {
-    const { layers } = this.state;
-    const newLayers = layers.slice();
-    newLayers[0] = {
-      name: 'Layer 1',
-      frames: [],
-      framesKeys: [],
-    };
+    // const state = JSON.parse(window.localStorage.getItem('savedState'));
+    // if (state) {
+    //   this.setState(state);
+    // }
 
-    this.setState({ layers: newLayers });
+    this.runOnKeys();
+    this.toolInfoInit();
+  }
 
-    this.keyHandler();
+  componentDidUpdate() {
+    // window.localStorage.setItem('savedState', JSON.stringify(this.state));
   }
 
   onColorRevert() {
     const { secondaryColor, primaryColor } = this.state;
-    this.setState({ primaryColor: secondaryColor });
-    this.setState({ secondaryColor: primaryColor });
+    this.setState({
+      primaryColor: secondaryColor,
+      secondaryColor: primaryColor,
+    });
   }
 
   onColorSelect(evt) {
@@ -80,8 +87,8 @@ class Editor extends Component {
     const pixels = frames[activeFrameIndex].slice();
     let coord = getPixelPosition(evt, scale);
     let result = null;
-    const startCoord = { ...{}, ...coord };
-    let prevCoord = { ...{}, ...coord };
+    const startCoord = { ...coord };
+    let prevCoord = { ...coord };
     result = toolActionMap[currentAction]({ startCoord, coord, prevCoord }, state,
       { canvas, pixels, startPixels }, { shiftKey: evt.shiftKey, ctrlKey: evt.ctrlKey });
     if (result.drawnPixels) {
@@ -98,7 +105,7 @@ class Editor extends Component {
           if (coord.x === prevCoord.x && coord.y === prevCoord.y) return;
           result = toolActionMap[currentAction]({ startCoord, coord, prevCoord },
             state, { canvas, pixels, startPixels }, { shiftKey: e.shiftKey, ctrlKey: e.ctrlKey });
-          prevCoord = { ...{}, ...coord };
+          prevCoord = { ...coord };
           if (result.drawnPixels) {
             result.drawnPixels.forEach(({ x, y, color }) => {
               pixels[y * scale + x] = color;
@@ -116,7 +123,7 @@ class Editor extends Component {
   }
 
   onFramesSwap(evt) {
-    onFrameDrag.default(evt, (firstFrameIndex, secondFrameIndex) => {
+    onFrameDrag(evt, (firstFrameIndex, secondFrameIndex) => {
       const { frames, framesKeys } = this.state;
 
       const keys = framesKeys.slice();
@@ -207,16 +214,13 @@ class Editor extends Component {
       } else if (evt.ctrlKey && char === 'C' && isPixelsSelected) {
         this.setState({ copiedPixels: selectedPixels });
       } else if (evt.ctrlKey && char === 'V' && copiedPixels.length) {
-        const {
-          frames, activeFrameIndex,
-          scale, mainCanvas,
-        } = this.state;
+        const { frames, activeFrameIndex, scale } = this.state;
         const newFrames = frames.slice();
         copiedPixels.forEach((pixel) => {
           const { x, y, color } = pixel;
           newFrames[activeFrameIndex][y * scale + x] = color;
         });
-        drawCanvas(mainCanvas.current.canvas, copiedPixels, scale);
+        drawCanvas(this.mainCanvas.current.canvas, copiedPixels, scale);
         this.setState({ frames: newFrames });
       } else {
         const { state } = this;
@@ -228,26 +232,45 @@ class Editor extends Component {
     });
   }
 
-
   clickFrameHandler({ target, id }) {
-    if (target.dataset.action === 'del') {
-      const { frames, activeFrameIndex, framesKeys } = this.state;
-      if (frames.length <= 1) return;
-      frames.splice(id, 1);
-      framesKeys.pop();
+    const {
+      frames, activeFrameIndex, framesKeys,
+      layers,
+    } = this.state;
+    const { action } = target.dataset;
+
+    if (frames.length <= 1 && action === 'del') return;
+
+    const tempFrames = frames.slice();
+    const tempFramesKeys = framesKeys.slice();
+
+    if (action === 'del') {
+      const tempLayers = layers.slice();
+      tempFrames.splice(id, 1);
+      tempFramesKeys.pop();
+      tempLayers.forEach((layer) => {
+        layer.frames.splice(id, 1);
+        layer.framesKeys.pop();
+      });
+
       this.setState({
-        frames,
-        framesKeys,
+        frames: tempFrames,
+        framesKeys: tempFramesKeys,
+        layers: tempLayers,
         activeFrameIndex: (activeFrameIndex < id)
           || (activeFrameIndex === 0) ? activeFrameIndex : activeFrameIndex - 1,
       });
-    } else if (target.dataset.action === 'copy') {
-      const { frames, framesKeys } = this.state;
-      frames.splice(id + 1, 0, frames[id].slice());
-      framesKeys.push(Math.random());
+    } else if (action === 'copy') {
+      tempFrames.splice(id + 1, 0, frames[id].slice());
+      tempFramesKeys.push(Math.random());
+      const updatedLayers = getUpdatedLayers(this.state);
+      updatedLayers.forEach((layer) => {
+        layer.frames.splice(id + 1, 0, layer.frames[id].slice());
+        layer.framesKeys.push(Math.random());
+      });
       this.setState({
-        frames,
-        framesKeys,
+        frames: tempFrames,
+        framesKeys: tempFramesKeys,
         activeFrameIndex: id + 1,
       });
     } else {
@@ -264,49 +287,25 @@ class Editor extends Component {
     }
   }
 
-  keyHandler() {
-    let isCtrlDown = false;
-    document.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Control' && isCtrlDown === false) {
-        isCtrlDown = true;
-        const onCopySelection = (e) => {
-          e.preventDefault();
-          if (e.key === 'c' && isCtrlDown === true) {
-            const { selectedPixels } = this.state;
-            this.setState({ copiedPixels: selectedPixels });
-          }
-          if (e.key === 'v' && isCtrlDown === true) {
-            const {
-              copiedPixels, frames, activeFrameIndex,
-              scale, mainCanvas,
-            } = this.state;
-            if (!copiedPixels.length) return;
-            const newFrames = frames.slice();
-            copiedPixels.forEach((pixel) => {
-              const { x, y, color } = pixel;
-              newFrames[activeFrameIndex][y * scale + x] = color;
-            });
-            drawCanvas(mainCanvas.current.canvas, copiedPixels, scale);
-            this.setState({ frames: newFrames });
-          }
-          if (e.key === 'Control' && isCtrlDown === true) {
-            isCtrlDown = false;
-            document.removeEventListener('keyup', onCopySelection);
-          }
-        };
-        document.addEventListener('keyup', onCopySelection);
-      }
-    });
-  }
-
   addFrameHandler() {
-    const { frames, scale, framesKeys } = this.state;
-    frames[frames.length] = new Array(scale ** 2).fill('#00000000');
-    framesKeys.push(Math.random());
+    const {
+      frames, scale, framesKeys,
+      layers,
+    } = this.state;
+    const tempFrames = frames.slice();
+    const tempFramesKeys = framesKeys.slice();
+    tempFrames.push(new Array(scale ** 2).fill(DEFAULT.color.background));
+    tempFramesKeys.push(Math.random());
+    const tempLayers = layers.slice();
+    tempLayers.forEach((layer) => {
+      layer.frames.push(new Array(scale ** 2).fill(DEFAULT.color.background));
+      layer.framesKeys.push(Math.random());
+    });
     this.setState({
-      frames,
-      activeFrameIndex: frames.length - 1,
-      framesKeys,
+      frames: tempFrames,
+      activeFrameIndex: tempFrames.length - 1,
+      framesKeys: tempFramesKeys,
+      layers: tempLayers,
     });
   }
 
@@ -320,9 +319,8 @@ class Editor extends Component {
     } else this.setState({ isModalShow: true });
   }
 
-  // eslint-disable-next-line no-unused-vars
   mouseUp(pixels, { coordinatesArray, isSelectFunction, selectedColor }, canvas) {
-    const { currentAction, backgroundColor } = this.state;
+    const { currentAction } = this.state;
     const { frames, activeFrameIndex, scale } = this.state;
     const newFrames = frames.slice();
     let newPixels = null;
@@ -347,7 +345,7 @@ class Editor extends Component {
     }
     if (coordinatesArray) {
       if (currentAction === 'move') {
-        newPixels = new Array(scale ** 2).fill(backgroundColor);
+        newPixels = new Array(scale ** 2).fill(DEFAULT.color.background);
       } else newPixels = pixels.slice();
       coordinatesArray.forEach((pixel) => {
         const { x, y, color } = pixel;
@@ -360,11 +358,6 @@ class Editor extends Component {
     });
   }
 
-  keyDownHandler() {
-    console.log(this.state);
-    console.log('key');
-  }
-
   keyChangeHandler(name) {
     this.setState({ changedShortcut: name });
   }
@@ -372,53 +365,18 @@ class Editor extends Component {
   resizeHandler(evt) {
     const value = +evt.target.value;
     const { scale, frames, layers } = this.state;
-    const resizeFrame = (frame, prevScale, nextScale) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = prevScale;
-      canvas.height = prevScale;
-      drawFullCanvas(canvas, frame, prevScale);
-      const nextCanvas = document.createElement('canvas');
-      const nextCtx = nextCanvas.getContext('2d');
-      nextCanvas.width = nextScale;
-      nextCanvas.height = nextScale;
-      const coord = Math.abs((nextScale - prevScale) / 2);
-      if (prevScale < nextScale) {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        nextCtx.putImageData(imageData, coord, coord);
-      } else {
-        const imageData = ctx.getImageData(coord, coord, nextCanvas.width, nextCanvas.height);
-        nextCtx.putImageData(imageData, 0, 0);
-      }
-      const { data } = nextCtx.getImageData(0, 0, nextCanvas.width, nextCanvas.height);
-      return data;
-    };
-
-    function getHex(n) {
-      return n.toString(16).padStart(2, '0');
-    }
-
-    const resizeFrames = resizedFrames => resizedFrames.map((frame) => {
-      const pixels = [];
-      const data = resizeFrame(frame, scale, value);
-      for (let i = 0; i < data.length; i += 4) {
-        const [r, g, b, a] = data.slice(i, i + 4);
-        pixels.push(`#${getHex(r)}${getHex(g)}${getHex(b)}${getHex(a)}`);
-      }
-      return pixels;
-    });
 
     const resizedLayers = layers.map((layer) => {
       const resizedLayer = {
         name: layer.name,
         framesKeys: layer.framesKeys,
-        frames: resizeFrames(layer.frames),
+        frames: resizeFrames(layer.frames, scale, value),
       };
       return resizedLayer;
     });
 
     this.setState({
-      frames: resizeFrames(frames),
+      frames: resizeFrames(frames, scale, value),
       scale: value,
       layers: resizedLayers,
     });
@@ -427,15 +385,15 @@ class Editor extends Component {
   layerHandler(evt) {
     const { target } = evt;
     const {
-      layers, frames, currentLayerIndex,
-      framesKeys, currentLayerName,
+      layers, frames, activeLayerIndex,
+      framesKeys, layerName,
     } = this.state;
     let { index } = target.dataset;
     index = +index;
-    if (index === currentLayerIndex) return;
+    if (index === activeLayerIndex) return;
     const newLayers = layers.slice();
-    newLayers[currentLayerIndex] = {
-      name: currentLayerName,
+    newLayers[activeLayerIndex] = {
+      name: layerName,
       frames: frames.slice(),
       framesKeys: framesKeys.slice(),
     };
@@ -443,8 +401,8 @@ class Editor extends Component {
     this.setState({
       layers: newLayers.slice(),
       frames: layers[index].frames.slice(),
-      currentLayerIndex: index,
-      currentLayerName: target.value,
+      activeLayerIndex: index,
+      layerName: target.value,
       framesKeys: layers[index].framesKeys.slice(),
       activeFrameIndex: 0,
     });
@@ -456,28 +414,36 @@ class Editor extends Component {
     const { state } = this;
     const actions = buttonActionMap[action](state);
     if (actions) {
-      const { newLayers, currentLayerIndex, currentLayerName } = actions;
+      const { newLayers, activeLayerIndex, layerName } = actions;
       this.setState({
         layers: newLayers.slice(),
-        frames: newLayers[currentLayerIndex].frames.slice(),
-        framesKeys: newLayers[currentLayerIndex].framesKeys.slice(),
-        currentLayerIndex,
+        frames: newLayers[activeLayerIndex].frames.slice(),
+        framesKeys: newLayers[activeLayerIndex].framesKeys.slice(),
+        activeLayerIndex,
         activeFrameIndex: 0,
-        currentLayerName,
+        layerName,
         layersNumber: action === 'Add' ? state.layersNumber + 1 : state.layersNumber,
       });
     }
   }
 
+  fileFormatHandler(evt) {
+    const { value } = evt.target;
+    this.setState({ fileFormat: value });
+  }
+
   render() {
     const {
       framesKeys, currentAction, primaryColor,
-      secondaryColor, isCanvasClear, frames,
-      activeFrameIndex, scale, width,
-      height, isModalShow,
+      secondaryColor, frames, activeFrameIndex,
+      scale, isPixelsSelected, isModalShow,
     } = this.state;
     return (
       <Layout
+        fileFormatHandler={e => this.fileFormatHandler(e)}
+        showModalHandler={e => this.showModalHandler(e)}
+        onEnter={e => this.mouseEnterToolHandler(e)}
+        onLeave={e => this.mouseLeaveToolHandler(e)}
         onSave={e => this.onSave(e)}
         onLoad={e => this.onLoad(e)}
         resizeHandler={e => this.resizeHandler(e)}
@@ -486,7 +452,6 @@ class Editor extends Component {
         framesKeys={framesKeys}
         onFrameDrag={e => this.onFramesSwap(e)}
         state={this.state}
-        drawFrame={this.drawFrame}
         clickFrameHandler={e => this.clickFrameHandler(e)}
         currentTool={currentAction}
         toolsActions={Object.keys(toolActionMap)}
@@ -503,12 +468,14 @@ class Editor extends Component {
         }}
       >
         <Canvas
-          isClear={isCanvasClear}
+          isCanvasMain
+          ref={this.mainCanvas}
+          isPixelsSelected={isPixelsSelected}
           pixels={frames[activeFrameIndex]}
           scale={scale}
-          width={width}
-          height={height}
-          canvasStyle={{ height: '800px', width: '800px' }}
+          width={DEFAULT.mainCanvas.width}
+          height={DEFAULT.mainCanvas.height}
+          canvasStyle={{ height: DEFAULT.mainCanvas.height, width: DEFAULT.mainCanvas.width }}
           onMouseDown={e => this.onMouseDown(e)}
         />
         <Modal

@@ -1,0 +1,12 @@
+.Auth {
+  padding-top: 3px;
+}
+
+.Name {
+  color: #ffffff;
+}
+
+.Auth button {
+  font-weight: bold;
+  cursor: pointer;
+}
