@@ -93,6 +93,21 @@ function mirror(...args) {
   return draw(...args, mirrorFlag);
 }
 
+function drawDitheringPixel({ coord }, { scale, primaryColor }, { canvas }) {
+  const { x, y } = coord;
+  const drawnPixels = [];
+  const ctx = canvas.getContext('2d');
+  const pixelSize = canvas.width / scale;
+
+  ctx.fillStyle = primaryColor;
+  if ((y % 2 === 0 && x % 2 === 0) || (y % 2 !== 0 && x % 2 !== 0)) {
+    return { isNextAction: true };
+  }
+  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  drawnPixels.push({ x, y, color: primaryColor });
+  return { drawnPixels, isNextAction: true };
+}
+
 function eraser({ coord }, { scale, backgroundColor }, { canvas }) {
   const { x, y } = coord;
   const drawnPixels = [];
@@ -408,6 +423,7 @@ const toolActionMap = {
   line,
   rectangle,
   circle: drawEllipsis,
+  dithering: drawDitheringPixel,
   paintAll,
   lighten,
   fillRectangle,
