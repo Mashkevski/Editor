@@ -255,6 +255,20 @@ function fillRectangle({ startCoord, coord }, { scale }, { canvas, pixels }) {
   return { coordinatesArray, isNextAction: true, isSelectFunction: true };
 }
 
+function selectIdenticalPixels({ coord }, { scale }, { canvas, pixels }) {
+  const shapeConf = {
+    scale,
+    primaryColor: SELECT_COLOR,
+  };
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+
+  const { drawnPixels, isNextAction } = fillPixels({ coord }, shapeConf, { canvas, pixels });
+  return { coordinatesArray: drawnPixels, isNextAction, isSelectFunction: true };
+}
+
 function drawEllipsis({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }, evt) {
   if (coord.x === startCoord.x
     && coord.y === startCoord.y) {
@@ -428,6 +442,7 @@ const toolActionMap = {
   lighten,
   fillRectangle,
   move,
+  shape: selectIdenticalPixels,
   picker: pickColor,
 };
 
