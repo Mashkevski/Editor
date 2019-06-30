@@ -12,6 +12,8 @@ import buttonActionMap from '../layerButtonActions';
 import Modal from '../../components/Modal/Modal';
 import CheatSheet from '../../components/CheatSheet/CheatSheet';
 import toolInfo from '../toolInfo';
+import saveActionMap from '../../actions/saveActions';
+import { loadFile, getFramesFromPiskel } from '../../actions/loadActions';
 
 class Editor extends Component {
   constructor(props) {
@@ -137,6 +139,45 @@ class Editor extends Component {
 
   onInputChange(evt) {
     this.setState({ fps: +evt.target.value });
+  }
+
+  onSave() {
+    const { state } = this;
+    saveActionMap[state.fileFormat](state);
+  }
+
+  async onLoad() {
+    try {
+      const { result, fileName } = await loadFile();
+      if (fileName.endsWith('.piskel')) {
+        const piskelFile = JSON.parse(result);
+        const { width, height } = piskelFile.piskel;
+        const tempLayers = piskelFile.piskel.layers.map((layerItem) => {
+          const layer = JSON.parse(layerItem);
+          const tempFramesKeys = layer.chunks[0].layout.map(() => Math.random());
+          return {
+            name: layer.name,
+            frames: getFramesFromPiskel(layer, width, height),
+            framesKeys: tempFramesKeys,
+          };
+        });
+        this.setState({
+          fps: piskelFile.piskel.fps,
+          scale: +piskelFile.piskel.height,
+          activeFrameIndex: 0,
+          frames: tempLayers[0].frames,
+          framesKeys: tempLayers[0].framesKeys,
+          layers: tempLayers,
+        });
+      } else if (fileName.endsWith('.own')) {
+        const state = JSON.parse(result);
+        if (state) {
+          this.setState(state);
+        }
+      }
+    } catch (e) {
+      console.log('Load error ', e);
+    }
   }
 
   toolInfoInit() {
