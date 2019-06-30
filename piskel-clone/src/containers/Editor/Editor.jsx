@@ -1,6 +1,4 @@
-/* eslint-disable no-debugger */
-/* eslint-disable no-console */
-/* global document */
+/* global document, window */
 
 import React, { Component } from 'react';
 import Layout from '../../components/Layout/Layout';
@@ -13,7 +11,7 @@ import Modal from '../../components/Modal/Modal';
 import CheatSheet from '../../components/CheatSheet/CheatSheet';
 import toolInfo from './constant/toolInfo';
 import saveActionMap from '../../actions/saveActions';
-import { loadFile, getFramesFromPiskel } from '../../actions/loadActions';
+import loadFile from '../../actions/loadActions';
 import { getUpdatedLayers } from '../../utils/utils';
 import DEFAULT from './constant/constants';
 
@@ -50,17 +48,17 @@ class Editor extends Component {
   }
 
   componentDidMount() {
-    // const state = JSON.parse(window.localStorage.getItem('savedState'));
-    // if (state) {
-    //   this.setState(state);
-    // }
+    const state = JSON.parse(window.localStorage.getItem('savedState'));
+    if (state) {
+      this.setState(state);
+    }
 
     this.runOnKeys();
     this.toolInfoInit();
   }
 
   componentDidUpdate() {
-    // window.localStorage.setItem('savedState', JSON.stringify(this.state));
+    window.localStorage.setItem('savedState', JSON.stringify(this.state));
   }
 
   onColorRevert() {
@@ -156,27 +154,7 @@ class Editor extends Component {
   async onLoad() {
     try {
       const { result, fileName } = await loadFile();
-      if (fileName.endsWith('.piskel')) {
-        const piskelFile = JSON.parse(result);
-        const { width, height } = piskelFile.piskel;
-        const tempLayers = piskelFile.piskel.layers.map((layerItem) => {
-          const layer = JSON.parse(layerItem);
-          const tempFramesKeys = layer.chunks[0].layout.map(() => Math.random());
-          return {
-            name: layer.name,
-            frames: getFramesFromPiskel(layer, width, height),
-            framesKeys: tempFramesKeys,
-          };
-        });
-        this.setState({
-          fps: piskelFile.piskel.fps,
-          scale: +piskelFile.piskel.height,
-          activeFrameIndex: 0,
-          frames: tempLayers[0].frames,
-          framesKeys: tempLayers[0].framesKeys,
-          layers: tempLayers,
-        });
-      } else if (fileName.endsWith('.own')) {
+      if (fileName.endsWith('.own')) {
         const state = JSON.parse(result);
         if (state) {
           this.setState(state);
@@ -198,7 +176,10 @@ class Editor extends Component {
         changedShortcut, isModalShow,
       } = this.state;
       const char = String.fromCharCode(evt.keyCode);
-      if (changedShortcut && isModalShow) {
+      if (evt.ctrlKey && char === 'R') {
+        window.localStorage.clear();
+        document.location.reload(true);
+      } else if (changedShortcut && isModalShow) {
         this.setState(prevState => ({
           toolInfo: prevState.toolInfo.map((item) => {
             if (item.name === changedShortcut) {
