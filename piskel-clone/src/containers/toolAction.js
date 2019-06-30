@@ -240,6 +240,79 @@ function fillRectangle({ startCoord, coord }, { scale }, { canvas, pixels }) {
   return { coordinatesArray, isNextAction: true, isSelectFunction: true };
 }
 
+function drawEllipsis({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }, evt) {
+  if (coord.x === startCoord.x
+    && coord.y === startCoord.y) {
+    return { isNextAction: true };
+  }
+  const coordinatesArray = [];
+  let rx = Math.abs((coord.x - startCoord.x) / 2);
+  let ry = Math.abs((coord.y - startCoord.y) / 2);
+  if (evt.ctrlKey) {
+    rx = Math.min(rx, ry);
+    ry = rx;
+  }
+  const xc = Math.min(coord.x, startCoord.x) + rx;
+  const yc = Math.min(coord.y, startCoord.y) + ry;
+
+  let dx; let dy; let d1; let d2; let x; let y;
+  const even = (rx - Math.floor(rx)) === 0;
+  x = rx - Math.floor(rx);
+  y = ry;
+
+  d1 = (ry * ry) - (rx * rx * ry) + (0.25 * rx * rx);
+  dx = 2 * ry * ry * x;
+  dy = 2 * rx * rx * y;
+
+  while (dx < dy) {
+    coordinatesArray.push({ x: x + xc, y: y + yc, color: primaryColor });
+    coordinatesArray.push({ x: -x + xc, y: y + yc, color: primaryColor });
+    coordinatesArray.push({ x: x + xc, y: -y + yc, color: primaryColor });
+    coordinatesArray.push({ x: -x + xc, y: -y + yc, color: primaryColor });
+    if (d1 < 0 && (even || rx > 3)) {
+      x += 1;
+      dx += (2 * ry * ry);
+      d1 = d1 + dx + (ry * ry);
+    } else {
+      x += 1;
+      y -= 1;
+      dx += (2 * ry * ry);
+      dy -= (2 * rx * rx);
+      d1 = d1 + dx - dy + (ry * ry);
+    }
+  }
+
+  d2 = ((ry * ry) * ((x + 0.5) * (x + 0.5)))
+  + ((rx * rx) * ((y - 1) * (y - 1)))
+  - (rx * rx * ry * ry);
+
+  while (y >= 0) {
+    coordinatesArray.push({ x: x + xc, y: y + yc, color: primaryColor });
+    coordinatesArray.push({ x: -x + xc, y: y + yc, color: primaryColor });
+    coordinatesArray.push({ x: x + xc, y: -y + yc, color: primaryColor });
+    coordinatesArray.push({ x: -x + xc, y: -y + yc, color: primaryColor });
+
+    if (d2 > 0) {
+      y -= 1;
+      dy -= (2 * rx * rx);
+      d2 = d2 + (rx * rx) - dy;
+    } else {
+      y -= 1;
+      x += 1;
+      dx += (2 * ry * ry);
+      dy -= (2 * rx * rx);
+      d2 = d2 + dx - dy + (rx * rx);
+    }
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+  drawCanvas(canvas, coordinatesArray, scale);
+
+  return { coordinatesArray, isNextAction: true };
+}
+
 function rectangle({ startCoord, coord }, state, { pixels, canvas }, { shiftKey }) {
   const { scale, primaryColor } = state;
   const coordinatesArray = [];
@@ -334,6 +407,7 @@ const toolActionMap = {
   bucket,
   line,
   rectangle,
+  circle: drawEllipsis,
   paintAll,
   lighten,
   fillRectangle,
