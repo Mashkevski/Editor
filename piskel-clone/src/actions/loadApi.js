@@ -47,7 +47,7 @@ const loadApi = () => {
             .then(onInit, onError);
         });
       }).catch(() => {
-        reject(new Error('Error loading scripts'));
+        reject(new Error('Error loading scripts: authorization will not be available'));
       });
   });
   return promise;

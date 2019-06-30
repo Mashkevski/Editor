@@ -4,8 +4,7 @@ import Backdrop from '../Backdrop/Backdrop';
 import style from './Modal.module.css';
 
 class Modal extends Component {
-  // eslint-disable-next-line no-unused-vars
-  shouldComponentUpdate({ show, children }, nextState) {
+  shouldComponentUpdate({ show, children }) {
     const { props } = this;
     return show !== props.show || children !== props.children;
   }

@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
 /* global window */
 import React, { Component } from 'react';
 import loadApi from '../../actions/loadApi';
 import style from './Auth.module.css';
+import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
 
 class Auth extends Component {
   constructor(props) {
@@ -10,6 +10,7 @@ class Auth extends Component {
     this.state = {
       name: '',
       isInit: false,
+      errorMessage: '',
     };
   }
 
@@ -22,7 +23,7 @@ class Auth extends Component {
       const response = await loadApi();
       if (response === 'init') this.setState({ isInit: true });
     } catch (e) {
-      console.log(e.message);
+      this.setState({ errorMessage: e.message });
     }
   }
 
@@ -43,8 +44,21 @@ class Auth extends Component {
     });
   }
 
+  showErrorMessageHandler() {
+    this.setState({ errorMessage: '' });
+  }
+
   render() {
-    const { name, isInit } = this.state;
+    const { name, isInit, errorMessage } = this.state;
+    let error = null;
+    if (errorMessage) {
+      error = (
+        <ErrorMessage
+          error={errorMessage}
+          modalClosed={() => this.showErrorMessageHandler()}
+        />
+      );
+    }
     return (
       <div className={style.Auth}>
         <span className={style.Name}>{`${name}  `}</span>
@@ -54,6 +68,7 @@ class Auth extends Component {
           </button>
         )}
         {!!name && <button type="button" onClick={() => this.signOut()}>Log out</button>}
+        {error}
       </div>
     );
   }

@@ -14,6 +14,7 @@ import saveActionMap from '../../actions/saveActions';
 import loadFile from '../../actions/loadActions';
 import { getUpdatedLayers } from '../../utils/utils';
 import DEFAULT from './constant/constants';
+import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
 
 class Editor extends Component {
   constructor(props) {
@@ -44,6 +45,7 @@ class Editor extends Component {
       changedShortcut: '',
       toolInfo: null,
       fileFormat: DEFAULT.fileFormat,
+      errorMessage: '',
     };
   }
 
@@ -159,9 +161,11 @@ class Editor extends Component {
         if (state) {
           this.setState(state);
         }
+      } else {
+        throw new Error('Invalid file type');
       }
     } catch (e) {
-      console.log('Load error ', e);
+      this.setState({ errorMessage: e.message });
     }
   }
 
@@ -300,6 +304,12 @@ class Editor extends Component {
     } else this.setState({ isModalShow: true });
   }
 
+  showErrorMessageHandler() {
+    this.setState({
+      errorMessage: '',
+    });
+  }
+
   mouseUp(pixels, { coordinatesArray, isSelectFunction, selectedColor }, canvas) {
     const { currentAction } = this.state;
     const { frames, activeFrameIndex, scale } = this.state;
@@ -418,7 +428,17 @@ class Editor extends Component {
       framesKeys, currentAction, primaryColor,
       secondaryColor, frames, activeFrameIndex,
       scale, isPixelsSelected, isModalShow,
+      errorMessage,
     } = this.state;
+    let error = null;
+    if (errorMessage) {
+      error = (
+        <ErrorMessage
+          error={errorMessage}
+          modalClosed={() => this.showErrorMessageHandler()}
+        />
+      );
+    }
     return (
       <Layout
         fileFormatHandler={e => this.fileFormatHandler(e)}
@@ -470,6 +490,7 @@ class Editor extends Component {
             state={this.state}
           />
         </Modal>
+        {error}
       </Layout>
     );
   }
