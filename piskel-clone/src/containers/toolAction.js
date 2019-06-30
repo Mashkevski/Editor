@@ -1,3 +1,6 @@
+import _ from 'lodash';
+import DEFAULT from '../../containers/Editor/constant/constants';
+
 const LIGHTEN_STEP = 17;
 const MAX_COLOR_VALUE = 255;
 const MIN_COLOR_VALUE = 0;
@@ -25,7 +28,6 @@ function drawCanvas(canvas, drawnPixels, scale) {
   drawnPixels.forEach((pixel) => {
     const { x, y, color } = pixel;
     ctx.fillStyle = color;
-    // ctx.clearRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
     ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
   });
 }
@@ -44,7 +46,7 @@ function getPixels({ shiftKey, ctrlKey }, x, y, color, scale) {
   return drawnPixels;
 }
 
-function draw({ coord, prevCoord }, { scale, primaryColor }, { canvas }, evt, mirrorFlag) {
+function drawPixel({ coord, prevCoord }, { scale, primaryColor }, { canvas }, evt, mirrorFlag) {
   const drawnPixels = [];
   if (Math.abs(prevCoord.x - coord.x) > 1 || Math.abs(prevCoord.y - coord.y)) {
     let x1 = prevCoord.x;
@@ -88,9 +90,9 @@ function draw({ coord, prevCoord }, { scale, primaryColor }, { canvas }, evt, mi
   return { drawnPixels, isNextAction: true };
 }
 
-function mirror(...args) {
+function drawMirrorPixels(...args) {
   const mirrorFlag = true;
-  return draw(...args, mirrorFlag);
+  return drawPixel(...args, mirrorFlag);
 }
 
 function drawDitheringPixel({ coord }, { scale, primaryColor }, { canvas }) {
@@ -108,13 +110,13 @@ function drawDitheringPixel({ coord }, { scale, primaryColor }, { canvas }) {
   return { drawnPixels, isNextAction: true };
 }
 
-function eraser({ coord }, { scale, backgroundColor }, { canvas }) {
+function erasePixel({ coord }, { scale }, { canvas }) {
   const { x, y } = coord;
   const drawnPixels = [];
   const ctx = canvas.getContext('2d');
   const pixelSize = canvas.width / scale;
   ctx.clearRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-  drawnPixels.push({ x, y, color: backgroundColor });
+  drawnPixels.push({ x, y, color: DEFAULT.color.background });
   return { drawnPixels, isNextAction: true };
 }
 
@@ -130,26 +132,27 @@ function darkenHex(n) {
   return num < MIN_COLOR_VALUE ? '00' : num.toString(16).padStart(2, '0');
 }
 
-function lighten({ coord }, { scale, backgroundColor }, { canvas, pixels }, evt) {
+function lightenPixel({ coord }, { scale }, { canvas, pixels }, evt) {
   const { x, y } = coord;
   const reg = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{0,2})/i;
   const [baseColor, r, g, b, a] = pixels[y * scale + x].match(reg);
-  if (baseColor === backgroundColor) return { isNextAction: false };
+  if (baseColor === DEFAULT.color.background) return { isNextAction: false };
   const drawnPixels = [];
   let color = '';
-  if (evt.shiftKey) {
+  if (evt.ctrlKey) {
     color = `#${darkenHex(r)}${darkenHex(g)}${darkenHex(b)}${a}`;
   } else {
     color = `#${lightenHex(r)}${lightenHex(g)}${lightenHex(b)}${a}`;
   }
   drawnPixels.push({ x, y, color });
   drawCanvas(canvas, drawnPixels, scale);
-  return { drawnPixels, isNextAction: false };
+  return { drawnPixels, isNextAction: true };
 }
 
-function bucket({ coord }, { scale, primaryColor }, { canvas, pixels }) {
+function fillPixels({ coord }, { scale, primaryColor }, { canvas, pixels }) {
   const pixelStack = [[coord.x, coord.y]];
   const targetColor = pixels[coord.y * scale + coord.x];
+  if (targetColor === primaryColor) return { isNextAction: false };
   const newPixels = pixels.slice();
   const drawnPixels = [];
   let newPos;
@@ -203,7 +206,7 @@ function bucket({ coord }, { scale, primaryColor }, { canvas, pixels }) {
   return { drawnPixels, isNextAction: false };
 }
 
-function line({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }) {
+function drawLine({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }) {
   let x1 = startCoord.x;
   let y1 = startCoord.y;
   const x2 = coord.x;
@@ -237,36 +240,35 @@ function line({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }
   return { coordinatesArray, isNextAction: true };
 }
 
-function fillRectangle({ startCoord, coord }, { scale }, { canvas, pixels }) {
+function drawRectangle({ startCoord, coord }, state, { pixels, canvas }, { ctrlKey }) {
+  const { scale, primaryColor } = state;
   const coordinatesArray = [];
   const xStart = Math.min(startCoord.x, coord.x);
   const yStart = Math.min(startCoord.y, coord.y);
-  const xEnd = Math.max(startCoord.x, coord.x);
-  const yEnd = Math.max(startCoord.y, coord.y);
-  for (let y = yStart; y <= yEnd; y += 1) {
-    for (let x = xStart; x <= xEnd; x += 1) {
-      coordinatesArray.push({ x, y, color: SELECT_COLOR });
-    }
+  let xEnd = Math.max(startCoord.x, coord.x);
+  let yEnd = Math.max(startCoord.y, coord.y);
+  if (ctrlKey) {
+    const minShift = Math.min(xEnd - xStart, yEnd - yStart);
+    yEnd = minShift + yStart;
+    xEnd = minShift + xStart;
   }
+
+  for (let x = xStart; x <= xEnd; x += 1) {
+    coordinatesArray.push({ x, y: yStart, color: primaryColor });
+    coordinatesArray.push({ x, y: yEnd, color: primaryColor });
+  }
+
+  for (let y = yStart; y <= yEnd; y += 1) {
+    coordinatesArray.push({ x: xStart, y, color: primaryColor });
+    coordinatesArray.push({ x: xEnd, y, color: primaryColor });
+  }
+
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.width);
   drawFullCanvas(canvas, pixels, scale);
   drawCanvas(canvas, coordinatesArray, scale);
-  return { coordinatesArray, isNextAction: true, isSelectFunction: true };
-}
 
-function selectIdenticalPixels({ coord }, { scale }, { canvas, pixels }) {
-  const shapeConf = {
-    scale,
-    primaryColor: SELECT_COLOR,
-  };
-
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.width);
-  drawFullCanvas(canvas, pixels, scale);
-
-  const { drawnPixels, isNextAction } = fillPixels({ coord }, shapeConf, { canvas, pixels });
-  return { coordinatesArray: drawnPixels, isNextAction, isSelectFunction: true };
+  return { coordinatesArray, isNextAction: true };
 }
 
 function drawEllipsis({ startCoord, coord }, { scale, primaryColor }, { pixels, canvas }, evt) {
@@ -342,38 +344,39 @@ function drawEllipsis({ startCoord, coord }, { scale, primaryColor }, { pixels, 
   return { coordinatesArray, isNextAction: true };
 }
 
-function rectangle({ startCoord, coord }, state, { pixels, canvas }, { shiftKey }) {
-  const { scale, primaryColor } = state;
+function fillRectangle({ startCoord, coord }, { scale }, { canvas, pixels }) {
   const coordinatesArray = [];
   const xStart = Math.min(startCoord.x, coord.x);
   const yStart = Math.min(startCoord.y, coord.y);
-  let xEnd = Math.max(startCoord.x, coord.x);
-  let yEnd = Math.max(startCoord.y, coord.y);
-  if (shiftKey) {
-    const minShift = Math.min(xEnd - xStart, yEnd - yStart);
-    yEnd = minShift + yStart;
-    xEnd = minShift + xStart;
-  }
-
-  for (let x = xStart; x <= xEnd; x += 1) {
-    coordinatesArray.push({ x, y: yStart, color: primaryColor });
-    coordinatesArray.push({ x, y: yEnd, color: primaryColor });
-  }
-
+  const xEnd = Math.max(startCoord.x, coord.x);
+  const yEnd = Math.max(startCoord.y, coord.y);
   for (let y = yStart; y <= yEnd; y += 1) {
-    coordinatesArray.push({ x: xStart, y, color: primaryColor });
-    coordinatesArray.push({ x: xEnd, y, color: primaryColor });
+    for (let x = xStart; x <= xEnd; x += 1) {
+      coordinatesArray.push({ x, y, color: SELECT_COLOR });
+    }
   }
-
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.width);
   drawFullCanvas(canvas, pixels, scale);
   drawCanvas(canvas, coordinatesArray, scale);
-
-  return { coordinatesArray, isNextAction: true };
+  return { coordinatesArray, isNextAction: true, isSelectFunction: true };
 }
 
-function paintAll({ coord }, { scale, primaryColor }, { pixels, canvas }) {
+function selectIdenticalPixels({ coord }, { scale }, { canvas, pixels }) {
+  const shapeConf = {
+    scale,
+    primaryColor: SELECT_COLOR,
+  };
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.width);
+  drawFullCanvas(canvas, pixels, scale);
+
+  const { drawnPixels, isNextAction } = fillPixels({ coord }, shapeConf, { canvas, pixels });
+  return { coordinatesArray: drawnPixels, isNextAction, isSelectFunction: true };
+}
+
+function fillIdenticalPixels({ coord }, { scale, primaryColor }, { pixels, canvas }) {
   const targetColor = pixels[coord.y * scale + coord.x];
   const drawnPixels = [];
   pixels.forEach((color, i) => {
@@ -388,7 +391,7 @@ function paintAll({ coord }, { scale, primaryColor }, { pixels, canvas }) {
   return { drawnPixels, isNextAction: false };
 }
 
-function move({ startCoord, coord }, { scale }, { pixels, canvas }) {
+function movePixels({ startCoord, coord }, { scale }, { pixels, canvas }) {
   if (coord.x === startCoord.x
     && coord.y === startCoord.y) {
     return { isNextAction: true };
@@ -413,7 +416,6 @@ function move({ startCoord, coord }, { scale }, { pixels, canvas }) {
 
 function pickColor({ coord }, { scale }, { pixels }) {
   const selectedColor = pixels[coord.y * scale + coord.x];
-  console.log(selectedColor);
   return { selectedColor, isNextAction: false };
 }
 
@@ -429,19 +431,24 @@ function getPixelPosition(event, scale) {
   };
 }
 
+const throttledLine = _.throttle(drawLine, 70);
+const throttleDrawEllipsis = _.throttle(drawEllipsis, 50);
+const throttleRectangle = _.throttle(drawRectangle, 50);
+const throttleMove = _.throttle(movePixels, 50);
+
 const toolActionMap = {
-  pen: draw,
-  mirror,
-  eraser,
-  bucket,
-  line,
-  rectangle,
-  circle: drawEllipsis,
+  pen: drawPixel,
+  mirror: drawMirrorPixels,
+  eraser: erasePixel,
+  bucket: fillPixels,
+  line: throttledLine,
+  rectangle: throttleRectangle,
+  circle: throttleDrawEllipsis,
   dithering: drawDitheringPixel,
-  paintAll,
-  lighten,
+  lighten: lightenPixel,
   fillRectangle,
-  move,
+  paintAll: fillIdenticalPixels,
+  move: throttleMove,
   shape: selectIdenticalPixels,
   picker: pickColor,
 };
