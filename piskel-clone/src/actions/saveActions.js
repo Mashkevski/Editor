@@ -63,7 +63,7 @@ function savePiskelFormat(state) {
       ],
     };
 
-    piskelFile.piskel.layers.push(JSON.stringify(layer));
+    piskelFile.piskel.layers.unshift(JSON.stringify(layer));
   });
 
   const jsonPiskelFile = JSON.stringify(piskelFile);

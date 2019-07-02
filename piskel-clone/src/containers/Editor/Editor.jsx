@@ -11,7 +11,7 @@ import Modal from '../../components/Modal/Modal';
 import CheatSheet from '../../components/CheatSheet/CheatSheet';
 import toolInfo from './constant/toolInfo';
 import saveActionMap from '../../actions/saveActions';
-import loadFile from '../../actions/loadActions';
+import { loadFile, getTempLayers } from '../../actions/loadActions';
 import { getUpdatedLayers } from '../../utils/utils';
 import DEFAULT from './constant/constants';
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
@@ -156,7 +156,23 @@ class Editor extends Component {
   async onLoad() {
     try {
       const { result, fileName } = await loadFile();
-      if (fileName.endsWith('.own')) {
+      if (fileName.endsWith('.piskel')) {
+        const piskelFile = JSON.parse(result);
+        const { piskel } = piskelFile;
+        const tempLayers = await getTempLayers(piskel);
+        tempLayers.reverse();
+        this.setState({
+          fps: piskel.fps,
+          scale: +piskel.width,
+          activeFrameIndex: 0,
+          activeLayerIndex: 0,
+          frames: tempLayers[0].frames,
+          framesKeys: tempLayers[0].framesKeys,
+          layerName: tempLayers[0].name,
+          layers: tempLayers,
+          layersNumber: tempLayers.length,
+        });
+      } else if (fileName.endsWith('.own')) {
         const state = JSON.parse(result);
         if (state) {
           this.setState(state);
